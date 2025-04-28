@@ -52,18 +52,18 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="videoPublication"
-        options={{
-          title: 'Video Publication',
-          tabBarIcon: ({ color }) => <Ionicons name="person" size={32} color={color} />,
-          tabBarShowLabel: false,
-        }}
-      />
-      <Tabs.Screen
         name="researcherVideo"
         options={{
           title: 'Researcher Video',
           tabBarIcon: ({ color }) => <Ionicons name="videocam" size={32} color={color} />,
+          tabBarShowLabel: false,
+        }}
+      />
+      <Tabs.Screen
+        name="videoPublication"
+        options={{
+          title: 'Video Publication',
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={32} color={color} />,
           tabBarShowLabel: false,
         }}
       />
