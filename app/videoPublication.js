@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import VideoCover from '../components/Video/VideoCover';
+import VideoPlayer from '../components/Video/VideoPlayer';
 
 const VIDEO_PUBLICATION_URL = "https://lt.org/node/4930?_format=json";
 const AUTHOR_URL = "https://lt.org/node/4928?_format=json";
@@ -9,6 +11,7 @@ const COVER_IMAGE_URL = "https://lt.org/sites/default/files/video/covers/Escobar
 export default function VideoPublicationScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
   // Data collections
   const [authorData, setAuthorData] = useState({});
@@ -40,6 +43,10 @@ export default function VideoPublicationScreen() {
     const data = await fetch(dataUrl).then(res => res.json());
     setterFn(data);
   }
+  
+  function handlePlayVideo() {
+    setShowVideoPlayer(true);
+  }
 
   // Function to strip HTML tags from text
   function stripHtmlTags(html) {
@@ -57,9 +64,18 @@ export default function VideoPublicationScreen() {
             <ScrollView>
               {/* Video Publication */}
               <View style={{marginBottom: 32}}>
-                <Image source={{uri: COVER_IMAGE_URL}} style={styles.coverImage} />
+                { !showVideoPlayer ? 
+                  <VideoCover 
+                    coverImageUrl={COVER_IMAGE_URL}
+                    author={authorData}
+                    onVideoPlay={handlePlayVideo}
+                  /> : 
+                  <VideoPlayer 
+                    videoData={videoData}
+                  />
+                }
+                {/* Video Info */}
                 <View style={styles.videoInfo}>
-                  <Text style={styles.videoAuthor}>{authorData.title?.[0]?.value}</Text>
                   <Text style={styles.videoTitle}>{videoData.title?.[0]?.value}</Text>
                   <Text style={styles.text}>{videoData.field_abstract?.[0]?.value}</Text>
                 </View>
@@ -92,7 +108,7 @@ export default function VideoPublicationScreen() {
               <View style={styles.dataContainer}>
                 <Text style={styles.dataTitle}>Credit</Text>
                 <View>
-                  <Text style={[styles.text, {marginBottom: 8}]}>© and Latest Thinking</Text>
+                  <Text style={[styles.text, { marginBottom: 8 }]}>© and Latest Thinking</Text>
                   <Text style={styles.text}>This work is licensed under CC-BY 4.0</Text>
                 </View>
               </View>
@@ -124,28 +140,15 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
   },
-  coverImage: {
-    width: 360,
-    height: 215,
-    resizeMode: 'cover',
-    borderBottomLeftRadius: 20,
+  videoTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+    color: '#333',
   },
   videoInfo: {
     gap: 16,
     paddingTop: 24,
     paddingBottom: 32,
-  },
-  videoAuthor: {
-    position: 'absolute',
-    top: -50,
-    left: 24,
-    fontSize: 16,
-    color: '#fff',
-  },
-  videoTitle: {
-    fontSize: 18,
-    fontWeight: 600,
-    color: '#333',
   },
   dataContainer: {
     gap: 20,
@@ -166,5 +169,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 600,
     color: '#333',
-  },
+  }
 });
