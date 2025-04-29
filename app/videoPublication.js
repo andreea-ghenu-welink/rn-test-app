@@ -1,41 +1,117 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+
+const VIDEO_PUBLICATION_URL = "https://lt.org/node/4930?_format=json";
+const AUTHOR_URL = "https://lt.org/node/4928?_format=json";
+const INSTITUTION_URL = "https://lt.org/node/4346?_format=json";
+const COVER_IMAGE_URL = "https://lt.org/sites/default/files/video/covers/Escobar%20Karla_Coverphoto.jpg";
 
 export default function VideoPublicationScreen() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
+
+  // Data collections
+  const [authorData, setAuthorData] = useState({});
+  const [videoData, setVideoData] = useState({});
+  const [institutionData, setInstitutionData] = useState({});
+
+  useEffect(() => {
+    handleFetchData();
+  }, []);
+
+  async function handleFetchData() {
+    setShowLoader(true);
+
+    try {
+      await fetchData(AUTHOR_URL, setAuthorData);
+      await fetchData(VIDEO_PUBLICATION_URL, setVideoData);
+      await fetchData(INSTITUTION_URL, setInstitutionData);
+
+    } catch (error){
+      console.error(error);
+
+    } finally {
+      setShowLoader(false);
+      setIsLoading(false);
+    }
+  }
+
+  async function fetchData(dataUrl, setterFn) {
+    const data = await fetch(dataUrl).then(res => res.json());
+    setterFn(data);
+  }
+
+  // Function to strip HTML tags from text
+  function stripHtmlTags(html) {
+    if (!html) return '';
+    return html.replace(/<\/?[^>]+(>|$)/g, '');
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>About App</Text>
-        <Text style={styles.version}>Version 1.0.0</Text>
-        
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.text}>
-          This is a simple demo app built with React Native and Expo Router,
-          demonstrating how to implement navigation between multiple screens.
-        </Text>
-        
-        <Text style={styles.sectionTitle}>Features</Text>
-        <Text style={styles.listItem}>• File-based routing</Text>
-        <Text style={styles.listItem}>• Tab navigation</Text>
-        <Text style={styles.listItem}>• Multiple screens</Text>
-        <Text style={styles.listItem}>• Clean, modern UI</Text>
-        
-        <Text style={styles.sectionTitle}>Contact</Text>
-        <Text style={styles.text}>
-          For support or inquiries, please contact support@example.com
-        </Text>
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      { isLoading ? (
+        showLoader && (
+          <ActivityIndicator size="large" color="#3498db" />
+        )) : 
+        ( <View>
+            <ScrollView>
+              {/* Video Publication */}
+              <View style={{marginBottom: 32}}>
+                <Image source={{uri: COVER_IMAGE_URL}} style={styles.coverImage} />
+                <View style={styles.videoInfo}>
+                  <Text style={styles.videoAuthor}>{authorData.title?.[0]?.value}</Text>
+                  <Text style={styles.videoTitle}>{videoData.title?.[0]?.value}</Text>
+                  <Text style={styles.text}>{videoData.field_abstract?.[0]?.value}</Text>
+                </View>
+                <Text style={styles.text}>
+                  <Text style={[styles.text, { fontWeight: 600 }]}>DOI: </Text>
+                  <Text style={styles.text}>{videoData.field_doi?.[0]?.value}</Text>
+                </Text>
+              </View> 
+
+              {/* Researcher */}
+              <View style={styles.dataContainer}>
+                <View style={styles.dataInfo}>
+                  <Image source={require('../assets/images/student-icon.png')} style={styles.dataIcon} />
+                  <Text style={styles.dataTitle}>Researcher</Text>
+                </View>
+                <Text style={styles.text}>{authorData.field_bio?.[0]?.value}</Text>
+              </View>
+
+              {/* Institution */}
+              <View style={styles.dataContainer}>
+                <View style={styles.dataInfo}>
+                  <Image source={require('../assets/images/building-icon.png')} style={styles.dataIcon} />
+                  <Text style={styles.dataTitle}>Institution</Text>
+                </View>
+                <Text style={[styles.text, { fontWeight: 600 }]}>{institutionData.title?.[0]?.value}</Text>
+                <Text style={styles.text}>{stripHtmlTags(institutionData.field_description?.[0]?.value)}</Text>
+              </View> 
+
+              {/* Credit */}
+              <View style={styles.dataContainer}>
+                <Text style={styles.dataTitle}>Credit</Text>
+                <View>
+                  <Text style={[styles.text, {marginBottom: 8}]}>© and Latest Thinking</Text>
+                  <Text style={styles.text}>This work is licensed under CC-BY 4.0</Text>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        )
+      }
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#fff',
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
+    width: '100%',
+    paddingHorizontal: 16
   },
   title: {
     fontSize: 24,
@@ -43,27 +119,52 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  version: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-  },
   text: {
     fontSize: 16,
     color: '#333',
     lineHeight: 24,
   },
-  listItem: {
+  coverImage: {
+    width: 360,
+    height: 215,
+    resizeMode: 'cover',
+    borderBottomLeftRadius: 20,
+  },
+  videoInfo: {
+    gap: 16,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  videoAuthor: {
+    position: 'absolute',
+    top: -50,
+    left: 24,
     fontSize: 16,
+    color: '#fff',
+  },
+  videoTitle: {
+    fontSize: 18,
+    fontWeight: 600,
     color: '#333',
-    lineHeight: 24,
-    marginLeft: 10,
+  },
+  dataContainer: {
+    gap: 20,
+    paddingVertical: 32,
+    borderTopWidth: 1,
+    borderColor: '#333',
+  },
+  dataInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16
+  },
+  dataIcon: {
+    width: 40,
+    height: 40,
+  },
+  dataTitle: {
+    fontSize: 20,
+    fontWeight: 600,
+    color: '#333',
   },
 });
