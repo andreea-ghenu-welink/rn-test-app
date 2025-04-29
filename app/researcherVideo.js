@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { View, Text, ActivityIndicator, StyleSheet, Image, Pressable } from 'react-native';
 
 const VIDEO_PUBLICATION_URL = "https://lt.org/node/4930?_format=json";
@@ -11,8 +11,6 @@ export default function ResearcherVideoScreen() {
   const [authorData, setAuthorData] = useState({});
   const [videoTitle, setVideoTitle] = useState('');
   const [showLoader, setShowLoader] = useState(false);
-
-  const router = useRouter();
 
   const placeholder = 
     <Text style={styles.title}>
@@ -53,10 +51,6 @@ export default function ResearcherVideoScreen() {
     setVideoTitle('');
   }
 
-  function handleCardPress() {
-    router.push('/videoPublication');
-  }
-
   return (
     <View style={styles.container}>
       {
@@ -67,30 +61,34 @@ export default function ResearcherVideoScreen() {
             placeholder
           )
         ) : (
-          <Pressable style={styles.videoCard} onPress={handleCardPress}>
-            <Image 
-              source={{uri: COVER_IMAGE_URL}} 
-              style={styles.coverImage}
-              onError={(e) => console.error('Image loading error:', e.nativeEvent.error)}
-            />
-            <View style={styles.videoCardContent}>
-              <Text style={styles.videoTitle}>
-              {videoTitle}
-            </Text>
-            <Text style={styles.videoAuthor}>
-              {authorData.title[0].value}
-            </Text>
+          <Link href="/videoPublication">
+            <View style={styles.videoCard}>
+              <Image 
+                source={{uri: COVER_IMAGE_URL}} 
+                style={styles.coverImage}
+                onError={(e) => console.error('Image loading error:', e.nativeEvent.error)}
+              />
+              <View style={styles.videoCardContent}>
+                <Text style={styles.videoTitle}>
+                {videoTitle}
+              </Text>
+              <Text style={styles.videoAuthor}>
+                {authorData.title[0].value}
+              </Text>
+              </View>
             </View>
-          </Pressable>
+          </Link>
         )
       }
       <View style={styles.buttonContainer}>
         <Pressable style={styles.button} onPress={handleFetchData}>
           <Text style={styles.buttonText}>Fetch</Text>
         </Pressable>
-        <Pressable style={[styles.button, styles.clearButton]} onPress={handleClearData}>
-          <Text style={styles.buttonText}>Clear Data</Text>
-        </Pressable>
+        { !isLoading && (
+          <Pressable style={[styles.button, styles.clearButton]} onPress={handleClearData}>
+            <Text style={styles.buttonText}>Clear Data</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
