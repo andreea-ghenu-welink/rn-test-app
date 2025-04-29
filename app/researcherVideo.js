@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, ActivityIndicator, StyleSheet, Image, Pressable } from 'react-native';
 
 const VIDEO_PUBLICATION_URL = "https://lt.org/node/4930?_format=json";
@@ -10,6 +11,8 @@ export default function ResearcherVideoScreen() {
   const [authorData, setAuthorData] = useState({});
   const [videoTitle, setVideoTitle] = useState('');
   const [showLoader, setShowLoader] = useState(false);
+
+  const router = useRouter();
 
   const placeholder = 
     <Text style={styles.title}>
@@ -50,6 +53,10 @@ export default function ResearcherVideoScreen() {
     setVideoTitle('');
   }
 
+  function handleCardPress() {
+    router.push('/videoPublication');
+  }
+
   return (
     <View style={styles.container}>
       {
@@ -60,7 +67,7 @@ export default function ResearcherVideoScreen() {
             placeholder
           )
         ) : (
-          <View style={styles.videoCard}>
+          <Pressable style={styles.videoCard} onPress={handleCardPress}>
             <Image 
               source={{uri: COVER_IMAGE_URL}} 
               style={styles.coverImage}
@@ -74,7 +81,7 @@ export default function ResearcherVideoScreen() {
               {authorData.title[0].value}
             </Text>
             </View>
-          </View>
+          </Pressable>
         )
       }
       <View style={styles.buttonContainer}>

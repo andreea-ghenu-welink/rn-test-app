@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Here we define the tabs, which screen will be displayed and the icons for each tab
+// Here we define the navigation tabs, which screen will be displayed and the icons for each tab
 export default function AppLayout() {
   return (
     <Tabs
