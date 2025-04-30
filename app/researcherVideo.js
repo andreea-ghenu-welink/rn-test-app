@@ -12,20 +12,12 @@ export default function ResearcherVideoScreen() {
   const [videoTitle, setVideoTitle] = useState('');
   const [showLoader, setShowLoader] = useState(false);
 
-  const placeholder = 
-    <Text style={styles.title}>
-      Click the{' '}
-      <Text style={styles.highlightedText}>Fetch</Text>
-      {' '}button below to discover and display researcher video details
-    </Text>
-
   async function handleFetchData() {
     setShowLoader(true);
 
     try {
       await fetchAuthorData();
       await fetchVideoTitle();
-
     } catch (error){
       console.error(error);
     } finally {
@@ -45,7 +37,7 @@ export default function ResearcherVideoScreen() {
   }
 
   function handleClearData() {
-    setAuthorData([]);
+    setAuthorData({});
     setIsLoading(true);
     setShowLoader(false);
     setVideoTitle('');
@@ -53,39 +45,59 @@ export default function ResearcherVideoScreen() {
 
   return (
     <View style={styles.container}>
-      {
-        isLoading ? (
-          showLoader ? (
+      {isLoading ? (
+        showLoader ? (
+          <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#3498db" />
-          ) : (
-            placeholder
-          )
+            <Text style={styles.loaderText}>Loading researcher data...</Text>
+          </View>
         ) : (
-          <Link href="/videoPublication">
-            <View style={styles.videoCard}>
+          <View style={styles.placeholderContainer}>
+            <Image source={require('../assets/images/article-icon.png')} style={styles.placeholderImage} />
+            <Text style={styles.title}>
+              Click the button below to discover and display researcher video details
+            </Text>
+          </View>
+        )
+      ) : (
+          <View style={styles.videoCard}>
+            <Link href="/videoPublication">
               <Image 
                 source={{uri: COVER_IMAGE_URL}} 
                 style={styles.coverImage}
                 onError={(e) => console.error('Image loading error:', e.nativeEvent.error)}
               />
-              <View style={styles.videoCardContent}>
-                <Text style={styles.videoTitle}>
+            </Link>
+            <View style={styles.videoCardContent}>
+              <Text style={styles.videoAuthor}>
+                {authorData.title && authorData.title[0] ? authorData.title[0].value : 'Author information'}
+              </Text>
+              <Text style={styles.videoTitle}>
                 {videoTitle}
               </Text>
-              <Text style={styles.videoAuthor}>
-                {authorData.title[0].value}
-              </Text>
-              </View>
+              <Link href="/videoPublication" asChild>
+                <Pressable style={styles.playButton}>
+                  <Image source={require('../assets/images/play-icon.png')} style={styles.playIcon}/>
+                  <Text style={styles.playButtonText}>Watch Now</Text>
+                </Pressable>
+              </Link>
             </View>
-          </Link>
-        )
-      }
+          </View>
+      )}
+      
       <View style={styles.buttonContainer}>
-        <Pressable style={styles.button} onPress={handleFetchData}>
-          <Text style={styles.buttonText}>Fetch</Text>
-        </Pressable>
-        { !isLoading && (
-          <Pressable style={[styles.button, styles.clearButton]} onPress={handleClearData}>
+        {isLoading ? (
+          <Pressable 
+            style={[styles.button, styles.primaryButton]} 
+            onPress={handleFetchData}
+          >
+            <Text style={styles.buttonText}>{isLoading ? 'Fetch Data' : 'Fetch New'}</Text>
+          </Pressable>
+        ) : (
+          <Pressable 
+            style={[styles.button, styles.clearButton]} 
+            onPress={handleClearData}
+          >
             <Text style={styles.buttonText}>Clear Data</Text>
           </Pressable>
         )}
@@ -97,79 +109,110 @@ export default function ResearcherVideoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: -100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    marginTop: -100,
+    backgroundColor: '#f8f9fa',
+    padding: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#333',
-    marginBottom: 16,
+    marginBottom: 30,
+    lineHeight: 24,
   },
-  highlightedText: {
-    fontWeight: 'bold',
-    color: '#3498db',
-    marginHorizontal: 5,
+  placeholderContainer: {
+    alignItems: 'center',
+    gap: 40,
   },
-  text: {
+  placeholderImage: {
+    width: 100,
+    height: 100,
+  },
+  loaderContainer: {
+    alignItems: 'center',
+  },
+  loaderText: {
+    marginTop: 10,
     fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
+    color: '#666',
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 50,
     flexDirection: 'row',
+    justifyContent: 'center',
     width: '100%',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 10,
+    gap: 12,
   },
   button: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    minWidth: 140,
+  },
+  playButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+    width: 150,
+    backgroundColor: '#c2c229',
+    borderRadius: 3,
+  },
+  playButtonText: {
+    fontSize: 14,
+    fontWeight: 600,
+  },
+  playIcon: {
+    width: 18,
+    height: 18,
+  },
+  primaryButton: {
     backgroundColor: '#3498db',
-    marginHorizontal: 'auto',
-    marginTop: 20,
-    width: 160,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 5,
   },
   clearButton: {
-    backgroundColor: '#A3A5A5',
+    backgroundColor: '#95a5a6',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   videoCard: {
-    width: 320,
+    width: '98%',
+    maxWidth: 320,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   coverImage: {
     width: '100%',
-    height: 192,
+    height: 220,
     resizeMode: 'cover',
   },
   videoCardContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
   videoTitle: {
     fontSize: 16,
-    fontWeight: 600,
-    marginBottom: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    color: '#333',
   },
   videoAuthor: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
 });

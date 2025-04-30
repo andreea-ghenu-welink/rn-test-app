@@ -42,8 +42,12 @@ export default function CameraScreen() {
     setPickedImage(null);
   }
 
-  let imagePreview = <Text style={styles.noImageText}>No image picked yet</Text>;
-
+  let imagePreview = 
+    <View style={styles.imagePlaceholderContainer}>
+      <Image source={require('../assets/images/image-placeholder.png')} style={styles.imagePlaceholder} />
+      <Text style={styles.noImageText}>Tap the camera button to take a photo</Text>
+    </View>
+    
   if (pickedImage) {
     imagePreview = <Image source={{uri: pickedImage}} style={styles.image} />;
   }
@@ -52,13 +56,13 @@ export default function CameraScreen() {
     <View style={styles.container}>
       <View style={styles.imagePreview}>{imagePreview}</View>
       <View style={styles.buttonContainer}>
-        <Pressable style={styles.button} onPress={takeImageHandler}>
-          <Text style={styles.buttonText}>Open Camera</Text>
+        <Pressable style={[styles.button, styles.cameraButton]} onPress={takeImageHandler}>
+          <Image source={require('../assets/images/camera-white.png')} style={{width: 40, height: 40}} />
         </Pressable>
 
         {pickedImage && (
           <Pressable style={[styles.button, styles.clearButton]} onPress={clearImageHandler}>
-            <Text style={styles.buttonText}>Clear Image</Text>
+            <Image source={require('../assets/images/trash-white.png')} style={{width: 40, height: 40}} />
           </Pressable>
         )}
       </View>
@@ -77,22 +81,25 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     width: '100%',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 10,
+    marginTop: 16,
   },
   button: {
-    backgroundColor: '#3498db',
     marginHorizontal: 'auto',
-    marginTop: 20,
-    width: 170,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 5,
+    padding: 18,
+    borderRadius: 999,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   clearButton: {
     backgroundColor: '#A3A5A5',
+  },
+  cameraButton: {
+    backgroundColor: '#3498db',
   },
   buttonText: {
     color: '#fff',
@@ -103,20 +110,37 @@ const styles = StyleSheet.create({
   imagePreview: {
     width: "100%",
     height: 400,
-    marginVertical: 8,
+    marginVertical: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ccc',
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  imagePlaceholderContainer: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
     width: '100%',
     height: '100%',
   },
+  imagePlaceholder: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    marginHorizontal: 'auto',
+  },
   noImageText: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
+    marginHorizontal: 16,
+    fontSize: 16,
+    color: '#ccc',
+    fontWeight: 600,
+    textAlign: 'center',
   },
 });
