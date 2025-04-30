@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { useVideoPlayer } from 'expo-video';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import VideoCover from '../components/Video/VideoCover';
 import VideoPlayer from '../components/Video/VideoPlayer';
@@ -18,8 +19,14 @@ export default function VideoPublicationScreen() {
   const [videoData, setVideoData] = useState({});
   const [institutionData, setInstitutionData] = useState({});
 
-  // Video player reference
-  const videoRef = useRef(null);
+  // Extract the URI safely
+  const videoUri = videoData?.field_video_url?.[0]?.uri;
+
+  // Initialize & instantiate video player
+  const player = useVideoPlayer(videoUri ?? null, playerInstance => {
+    playerInstance.loop = false;
+    playerInstance.muted = false;
+  });
 
   useEffect(() => {
     handleFetchData();
@@ -28,25 +35,25 @@ export default function VideoPublicationScreen() {
   // Effect to handle initial play when player becomes visible
   useEffect(() => {
     // Only try to play if the player should be visible AND the ref is attached
-    if (showVideoPlayer && videoRef.current) {
-      videoRef.current.playAsync();
+    if (showVideoPlayer && player) {
+      player.play();
     }
-  }, [showVideoPlayer]); // Dependency: run when showVideoPlayer changes
+  }, [showVideoPlayer, player]); // Dependency: run when showVideoPlayer changes
 
   // Effect to pause video when the screen loses focus
-  useFocusEffect(
-    useCallback(() => {
-     // This runs when the screen comes into focus.
-      // We don't need to do anything here for playback control.
+  // useFocusEffect(
+  //   useCallback(() => {
+  //    // This runs when the screen comes into focus.
+  //     // We don't need to do anything here for playback control.
 
-      // Return the cleanup function to run when the screen loses focus.
-      return () => {
-        if (videoRef.current) {
-          videoRef.current.pauseAsync();
-        }
-      }
-    }, []) // Empty dependency array: runs on mount/unmount and focus/blur
-  )
+  //     // Return the cleanup function to run when the screen loses focus.
+  //     return () => {
+  //       if (player) {
+  //         player.pause();
+  //       }
+  //     }
+  //   }, [player]) // Empty dependency array: runs on mount/unmount and focus/blur
+  // )
 
   async function handleFetchData() {
     try {
@@ -92,8 +99,8 @@ export default function VideoPublicationScreen() {
     <View style={styles.container}>
       { isLoading ? (
           <ActivityIndicator size="large" color="#3498db" />
-        ) : 
-        ( 
+        ) :
+        (
           <View>
             <ScrollView>
               {/* Video Publication */}
@@ -105,8 +112,8 @@ export default function VideoPublicationScreen() {
                     onVideoPlay={handlePlayVideo}
                   /> : 
                   <VideoPlayer 
-                    videoData={videoData}
-                    ref={videoRef}
+                    videoSource={videoUri}
+                    player={player}
                   />
                 }
                 {/* Video Info */}
