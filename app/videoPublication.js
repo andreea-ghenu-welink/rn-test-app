@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import VideoCover from '../components/Video/VideoCover';
 import VideoPlayer from '../components/Video/VideoPlayer';
@@ -10,7 +11,6 @@ const COVER_IMAGE_URL = "https://lt.org/sites/default/files/video/covers/Escobar
 
 export default function VideoPublicationScreen() {
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
   // Data collections
@@ -18,30 +18,64 @@ export default function VideoPublicationScreen() {
   const [videoData, setVideoData] = useState({});
   const [institutionData, setInstitutionData] = useState({});
 
+  // Video player reference
+  const videoRef = useRef(null);
+
   useEffect(() => {
     handleFetchData();
   }, []);
 
-  async function handleFetchData() {
-    setShowLoader(true);
+  // Effect to handle initial play when player becomes visible
+  useEffect(() => {
+    // Only try to play if the player should be visible AND the ref is attached
+    if (showVideoPlayer && videoRef.current) {
+      videoRef.current.playAsync();
+    }
+  }, [showVideoPlayer]); // Dependency: run when showVideoPlayer changes
 
+  // Effect to pause video when the screen loses focus
+  useFocusEffect(
+    useCallback(() => {
+     // This runs when the screen comes into focus.
+      // We don't need to do anything here for playback control.
+
+      // Return the cleanup function to run when the screen loses focus.
+      return () => {
+        if (videoRef.current) {
+          videoRef.current.pauseAsync();
+        }
+      }
+    }, []) // Empty dependency array: runs on mount/unmount and focus/blur
+  )
+
+  async function handleFetchData() {
     try {
-      await fetchData(AUTHOR_URL, setAuthorData);
-      await fetchData(VIDEO_PUBLICATION_URL, setVideoData);
-      await fetchData(INSTITUTION_URL, setInstitutionData);
+      await Promise.all([
+        fetchData(AUTHOR_URL, setAuthorData),
+        fetchData(VIDEO_PUBLICATION_URL, setVideoData),
+        fetchData(INSTITUTION_URL, setInstitutionData)
+      ]);
 
     } catch (error){
-      console.error(error);
+      console.error('Failed to fetch data:', error);
 
     } finally {
-      setShowLoader(false);
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
   async function fetchData(dataUrl, setterFn) {
-    const data = await fetch(dataUrl).then(res => res.json());
-    setterFn(data);
+    try {
+      const response = await fetch(dataUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setterFn(data);
+    } catch (error) {
+      console.error(`Error fetching ${dataUrl}:`, error);
+      throw error;
+    }
   }
   
   function handlePlayVideo() {
@@ -57,10 +91,10 @@ export default function VideoPublicationScreen() {
   return (
     <View style={styles.container}>
       { isLoading ? (
-        showLoader && (
           <ActivityIndicator size="large" color="#3498db" />
-        )) : 
-        ( <View>
+        ) : 
+        ( 
+          <View>
             <ScrollView>
               {/* Video Publication */}
               <View style={{marginBottom: 32}}>
@@ -72,6 +106,7 @@ export default function VideoPublicationScreen() {
                   /> : 
                   <VideoPlayer 
                     videoData={videoData}
+                    ref={videoRef}
                   />
                 }
                 {/* Video Info */}
@@ -159,11 +194,11 @@ const styles = StyleSheet.create({
   dataInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16
+    gap: 10
   },
   dataIcon: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
   },
   dataTitle: {
     fontSize: 20,

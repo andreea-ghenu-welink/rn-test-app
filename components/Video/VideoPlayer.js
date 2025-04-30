@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { useState, useCallback, forwardRef, useEffect } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { Video, ResizeMode, VideoFullscreenUpdate } from 'expo-av';
 
-export default function VideoPlayer({ videoData }) {
-  // Initialize status with isLoaded: false to show loader initially
-  const [status, setStatus] = useState({ isLoaded: false });
+const VideoPlayer = forwardRef(({ videoData }, ref) => {
+  // Add separate loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState({});
 
   // State to track full screen mode
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -23,6 +24,16 @@ export default function VideoPlayer({ videoData }) {
         break;
     }
   }, []); // No dependencies, so useCallback is efficient here
+
+  // Handle playback status updates
+  const handlePlaybackStatusUpdate = (playbackStatus) => {
+    setStatus(playbackStatus);
+    
+    // Set loading to false once the video is loaded
+    if (playbackStatus.isLoaded && isLoading) {
+      setIsLoading(false);
+    }
+  };
 
   // Handle cases where the URI might be missing
   if (!videoUri) {
@@ -43,26 +54,34 @@ export default function VideoPlayer({ videoData }) {
       {/* Video component is always rendered to initiate loading */}
       <Video
         style={styles.video}
+        ref={ref}
         source={{
           uri: videoUri,
         }}
         useNativeControls
         resizeMode={isFullScreen ? ResizeMode.CONTAIN : ResizeMode.COVER}
-        shouldPlay={true}
+        // Start paused; playback initiated via cover click or native controls
+        shouldPlay={false}
         onFullscreenUpdate={handleFullscreenUpdate}
-        onPlaybackStatusUpdate={playbackStatus => setStatus(playbackStatus)}
-        onError={(error) => console.error("Video Error:", error)}
+        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+        onError={(error) => {
+          console.error("Video Error:", error);
+          setIsLoading(false);
+        }}
+        onLoadStart={() => setIsLoading(true)}
       />
 
-      {/* Show ActivityIndicator overlay only if video is not loaded */}
-      { !status.isLoaded && (
+      {/* Show ActivityIndicator overlay only if video is loading */}
+      {isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#3498db" />
         </View>
       )}
     </View>
   )
-}
+});
+
+export default VideoPlayer;
 
 const styles = StyleSheet.create({
   videoContainer: {
