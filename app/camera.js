@@ -1,21 +1,39 @@
-import { View, Text, Image, Pressable, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
-import { launchCameraAsync, useCameraPermissions, PermissionStatus } from 'expo-image-picker';
+import { View, Text, Image, Pressable, StyleSheet, Alert } from 'react-native';
+import SelectImageModal from '../components/Modal/SelectImageModal';
+import { 
+  launchCameraAsync,
+  launchImageLibraryAsync,
+  useCameraPermissions, 
+  useMediaLibraryPermissions, 
+  PermissionStatus 
+} from 'expo-image-picker';
 
 export default function CameraScreen() {
-  const [cameraPermissionInformation, requestPermission] = useCameraPermissions();
-  const [pickedImage, setPickedImage] = useState();
+  // States for camera and gallery permissions
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [galleryPermission, requestGalleryPermission] = useMediaLibraryPermissions();
 
-  async function verifyPermissions() {
+  // State for selected image
+  const [selectedImage, setSelectedImage] = useState();
+
+  // State for modal visibility
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  async function verifyPermissions(permission, requestPermissionFunction) {
     // if the permission is not determined, request permission
-    if (cameraPermissionInformation.status === PermissionStatus.UNDETERMINED) {
-      const permissionResponse = await requestPermission();
+    if (permission.status === PermissionStatus.UNDETERMINED) {
+      const permissionResponse = await requestPermissionFunction();
       return permissionResponse.granted;
     }
 
     // if the permission is denied, return false
-    if (cameraPermissionInformation.status === PermissionStatus.DENIED) {
-      Alert.alert('Insufficient Permissions!', 'You need to grant permission to use the camera');
+    if (permission.status === PermissionStatus.DENIED) {
+      if (permission === cameraPermission) {
+        Alert.alert('Insufficient Permissions!', 'You need to grant permission to use the camera');
+      } else {
+        Alert.alert('Insufficient Permissions!', 'You need to grant permission to use the gallery');
+      }
       return false;
     }
 
@@ -23,49 +41,83 @@ export default function CameraScreen() {
     return true;
   }
 
-  async function takeImageHandler() {
-    const hasPermissions = await verifyPermissions();
+  async function takeCameraImageHandler() {
+    const hasPermissions = await verifyPermissions(cameraPermission, requestCameraPermission);
 
     if (!hasPermissions) {
       return;
     }
 
     const image = await launchCameraAsync({
-      allowsEditing: true, // allows user to edit the image before saving
-      quality: 0.5, // quality of the image
+      allowsEditing: true,
+      quality: 0.5,
     });
 
-    setPickedImage(image.assets[0].uri);
+    if (!image.canceled) {
+      setSelectedImage(image.assets[0].uri);
+      setIsModalVisible(false);
+    }
+  }
+
+  async function pickGalleryImageHandler() {
+    const hasPermissions = await verifyPermissions(galleryPermission, requestGalleryPermission);
+
+    if (!hasPermissions) {
+      return;
+    }
+
+    const image = await launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.5,
+    });
+
+    if (!image.canceled) {
+      setSelectedImage(image.assets[0].uri);
+      setIsModalVisible(false);
+    }
   }
 
   function clearImageHandler() {
-    setPickedImage(null);
+    setSelectedImage(null);
+  }
+
+  function cancelModalHandler() {
+    setIsModalVisible(false);
   }
 
   let imagePreview = 
     <View style={styles.imagePlaceholderContainer}>
       <Image source={require('../assets/images/image-placeholder.png')} style={styles.imagePlaceholder} />
-      <Text style={styles.noImageText}>Tap the camera button to take a photo</Text>
+      <Text style={styles.noImageText}>Tap the button below to capture or select an image</Text>
     </View>
     
-  if (pickedImage) {
-    imagePreview = <Image source={{uri: pickedImage}} style={styles.image} />;
+  if (selectedImage) {
+    imagePreview = <Image source={{uri: selectedImage}} style={styles.image} />;
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.imagePreview}>{imagePreview}</View>
+
       <View style={styles.buttonContainer}>
-        <Pressable style={[styles.button, styles.cameraButton]} onPress={takeImageHandler}>
-          <Image source={require('../assets/images/camera-white.png')} style={{width: 40, height: 40}} />
+        <Pressable style={[styles.button, styles.imageButton]} onPress={() => setIsModalVisible(true)}>
+          <Image source={require('../assets/images/image-picker.png')} style={{width: 40, height: 40}} />
         </Pressable>
 
-        {pickedImage && (
+        {selectedImage && (
           <Pressable style={[styles.button, styles.clearButton]} onPress={clearImageHandler}>
             <Image source={require('../assets/images/trash-white.png')} style={{width: 40, height: 40}} />
           </Pressable>
         )}
       </View>
+
+      <SelectImageModal 
+        isVisible={isModalVisible} 
+        onTakePhoto={takeCameraImageHandler}
+        onPickImage={pickGalleryImageHandler}
+        onCancel={cancelModalHandler} 
+      />
     </View>
   );
 }
@@ -98,7 +150,7 @@ const styles = StyleSheet.create({
   clearButton: {
     backgroundColor: '#A3A5A5',
   },
-  cameraButton: {
+  imageButton: {
     backgroundColor: '#3498db',
   },
   buttonText: {
