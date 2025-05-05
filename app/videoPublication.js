@@ -144,7 +144,6 @@ export default function VideoPublicationScreen() {
           {/* Conditionally render Player only when intended AND URI is ready */}
           { showVideoPlayer && videoUri ?
             <VideoPlayer
-              videoSource={videoUri}
               player={player}
             /> :
             <VideoCover
