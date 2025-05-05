@@ -57,9 +57,6 @@ export default function VideoPublicationScreen() {
 
       // Return the cleanup function. This runs when the screen loses focus or unmounts.
       return () => {
-        // Only attempt to pause if the player instance exists AND
-        // the URI was valid when this *specific* effect instance was set up.
-        // This prevents the cleanup from the initial null-URI state from causing issues.
         if (player && wasUriValidOnFocus) {
           try {
             player.pause();
@@ -73,9 +70,7 @@ export default function VideoPublicationScreen() {
           console.log('Skipping pause in focus cleanup (player missing or URI was invalid).');
         }
       };
-    }, [player, videoUri]) // *** IMPORTANT: Depend on both player and videoUri ***
-    // This ensures the effect re-runs and captures the new URI state
-    // when the videoUri becomes available after the fetch.
+    }, [player, videoUri])
   );
 
   // --- Async Functions ---
@@ -90,7 +85,7 @@ export default function VideoPublicationScreen() {
     } catch (error){
       console.error('Failed to fetch data:', error);
     } finally {
-      setIsLoading(false); // Stop loading indicator
+      setIsLoading(false);
     }
   }
 
@@ -104,13 +99,13 @@ export default function VideoPublicationScreen() {
       setterFn(data);
     } catch (error) {
       console.error(`Error fetching ${dataUrl}:`, error);
-      throw error; // Allow Promise.all to catch it
+      throw error;
     }
   }
 
   // --- Event Handlers ---
   function handlePlayVideo() {
-    // Only transition to showing the player if the URI is ready.
+    // Show the player only if the URI is ready.
     if (videoUri) {
       setShowVideoPlayer(true);
     } else {
@@ -135,24 +130,22 @@ export default function VideoPublicationScreen() {
     );
   }
 
-  // Render content once data is loaded.
   return (
     <View style={styles.container}>
       <ScrollView>
         {/* Video Section */}
         <View style={{marginBottom: 32}}>
-          {/* Conditionally render Player only when intended AND URI is ready */}
           { showVideoPlayer && videoUri ?
             <VideoPlayer
               player={player}
             /> :
             <VideoCover
-              coverImageUrl={COVER_IMAGE_URL} // Provide fallback if needed
+              coverImageUrl={COVER_IMAGE_URL}
               author={authorData}
               onVideoPlay={handlePlayVideo}
             />
           }
-          {/* Video Info - Render only if data is available */}
+          {/* Video Info */}
           { videoData.title && (
             <View style={styles.videoInfo}>
               <Text style={styles.videoTitle}>{videoData.title?.[0]?.value}</Text>
@@ -165,7 +158,7 @@ export default function VideoPublicationScreen() {
           )}
         </View>
 
-        {/* Researcher Section - Render only if data is available */}
+        {/* Researcher Section */}
         {authorData.field_bio && (
           <View style={styles.dataContainer}>
             <View style={styles.dataInfo}>
@@ -176,7 +169,7 @@ export default function VideoPublicationScreen() {
           </View>
         )}
 
-        {/* Institution Section - Render only if data is available */}
+        {/* Institution Section */}
         {institutionData.title && (
           <View style={styles.dataContainer}>
             <View style={styles.dataInfo}>

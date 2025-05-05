@@ -1,12 +1,9 @@
 import { useState } from 'react';
-// Import useEvent hook from expo
 import { useEvent } from 'expo';
-// Import VideoView and the status enum
 import { VideoView } from 'expo-video';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 
 function VideoPlayer({ player }) {
-  // --- State for UI unrelated to player status ---
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   // --- Use useEvent to get the latest player status ---
@@ -17,17 +14,15 @@ function VideoPlayer({ player }) {
   });
 
   // --- Derive isLoading directly from the status provided by useEvent ---
-  // The component will re-render automatically when latestEvent.status changes.
+  // The component will re-render automatically when playerStatus.status changes.
   const isLoading = playerStatus.status === 'loading';
 
   // --- Render Logic ---
 
   // Handle the case where the player prop might not be ready yet
-  // (although useEvent might handle null player gracefully, this is safer)
   if (!player) {
      return (
        <View style={[styles.videoContainer, styles.centerContent]}>
-         {/* Show a placeholder or minimal loader */}
          <ActivityIndicator size="large" color="#cccccc" />
        </View>
      );
@@ -44,8 +39,6 @@ function VideoPlayer({ player }) {
         onFullscreenEnter={() => setIsFullScreen(true)}
         onFullscreenExit={() => setIsFullScreen(false)}
       />
-
-      {/* Show ActivityIndicator overlay based on the derived isLoading state */}
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#3498db" />
@@ -64,7 +57,7 @@ const styles = StyleSheet.create({
     height: 215,
     borderBottomLeftRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#000', // Keep background for visibility
+    backgroundColor: '#000',
   },
   video: {
     width: '100%',
