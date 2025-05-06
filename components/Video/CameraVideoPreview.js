@@ -44,7 +44,7 @@ export default function CameraVideoPreview({ player }) {
 // --- Styles ---
 const styles = StyleSheet.create({
   videoContainer: {
-    width: 300,
+    width: '100%',
     aspectRatio: 9/16,
     overflow: 'hidden',
     backgroundColor: '#000',

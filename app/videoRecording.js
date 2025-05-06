@@ -1,8 +1,9 @@
-import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useRef, useState, useCallback, useEffect } from "react";
-import { useFocusEffect } from 'expo-router';
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useVideoPlayer } from 'expo-video';
-import { Button, Pressable, StyleSheet, Text, View } from "react-native";
+import * as MediaLibrary from 'expo-media-library';
+import { useFocusEffect } from 'expo-router';
+import { Button, Pressable, StyleSheet, Text, View, Image } from "react-native";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import CameraVideoPreview from "../components/Video/CameraVideoPreview";
 
@@ -10,6 +11,7 @@ export default function VideoRecording() {
   // Permissions
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
+  const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
 
   // Camera ref
   const cameraRef = useRef(null);
@@ -88,6 +90,17 @@ export default function VideoRecording() {
     );
   }
 
+  if (!mediaLibraryPermission || !mediaLibraryPermission.granted) {
+    return (
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Text style={{ textAlign: "center", fontSize: 20 }}>
+          We need your permission to save the video
+        </Text>
+        <Button onPress={requestMediaLibraryPermission} title="Grant permission" />
+      </View>
+    );
+  }
+
   const recordVideo = async () => {
     if (recording) {
       setRecording(false);
@@ -112,13 +125,30 @@ export default function VideoRecording() {
     setFacing((prev) => (prev === "back" ? "front" : "back"));
   };
 
+  const saveVideoToLibrary = async () => {
+    if (uri) {
+      try {
+        await MediaLibrary.saveToLibraryAsync(uri);
+        alert('Video saved to gallery!');
+      } catch (error) {
+        console.error("Error saving video to library: ", error);
+      }
+    }
+  }
+
   const renderVideoPreview = () => {
     return (
       <View style={[styles.container, styles.previewContainer]}>
         <CameraVideoPreview player={player} />
-        <Pressable style={styles.button} onPress={() => setUri(null)}>
-          <Text style={styles.buttonText}>Take another video</Text>
-        </Pressable>
+
+        <View style={styles.buttonContainer}>
+          <Pressable style={styles.button} onPress={saveVideoToLibrary}>
+            <Image source={require('../assets/images/save-icon.png')} style={styles.buttonImage} />
+          </Pressable>
+          <Pressable style={[styles.button, { backgroundColor: '#E55050' }]} onPress={() => setUri(null)}>
+            <Image source={require('../assets/images/trash-white.png')} style={styles.buttonImage} />
+          </Pressable>
+        </View>
       </View>
     );
   };
@@ -189,24 +219,36 @@ const styles = StyleSheet.create({
   permissionContainer: {
     flex: 1,
     justifyContent: "center",
+    width: "100%",
     paddingHorizontal: 20,
     gap: 20,
   },
   previewContainer: {
-    gap: 30,
+    gap: 24,
   },
   camera: {
     flex: 1,
     width: "100%",
   },
+  buttonContainer: {
+    position: "absolute",
+    top: 32,
+    right: 15,
+    gap: 10,
+  },
   button: {
-    width: 250,
+    width: 50,
+    height: 50,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#3984c6",
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
+  },
+  buttonImage: {
+    width: 28,
+    height: 28,
   },
   buttonText: {
     textAlign: 'center',
