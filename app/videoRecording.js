@@ -1,8 +1,10 @@
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from 'expo-router';
+import { useVideoPlayer } from 'expo-video';
 import { Button, Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import CameraVideoPreview from "../components/Video/CameraVideoPreview";
 
 export default function VideoRecording() {
   // Permissions
@@ -20,19 +22,47 @@ export default function VideoRecording() {
   // Camera UI
   const [isCameraActive, setIsCameraActive] = useState(true);
 
-  // Prevent the camera from being active when the screen is not focused
+  // Initialize the player
+  const player = useVideoPlayer(uri ?? null, playerInstance => {
+    playerInstance.loop = false;
+    playerInstance.muted = false;
+  });
+
+  // Effect to automatically play the video when it's available
+  useEffect(() => {
+    if (player && uri) {
+      player.play();
+    }
+  }, [player, uri]);
+
   useFocusEffect(
     useCallback(() => {
+      const wasUriValidOnFocus = !!uri;
       setIsCameraActive(true);
 
       return () => {
+        // Prevent the camera from being active when the screen is not focused
         setIsCameraActive(false);
+
+        // Pause the video when the screen is not focused
+        if (player && wasUriValidOnFocus) {
+          try {
+            player.pause();
+          } catch (error) {
+            console.warn(
+              'Failed to pause video during focus cleanup:',
+              error
+            );
+          }
+        } else {
+          console.log('Skipping pause in focus cleanup (player missing or URI was invalid).');
+        }
       }
-    }, [])
+    }, [player, uri])
   );
 
+  // Camera permissions are still loading
   if (!cameraPermission || !microphonePermission) {
-    // Camera permissions are still loading
     return null;
   }
 
@@ -71,7 +101,6 @@ export default function VideoRecording() {
       const video =  await cameraRef.current?.recordAsync();
       if (video) {
         setUri(video?.uri);
-        console.log({ video });
       }
     } catch (error) {
       console.error("Error recording video: ", error);
@@ -83,11 +112,12 @@ export default function VideoRecording() {
     setFacing((prev) => (prev === "back" ? "front" : "back"));
   };
 
-  const renderPicture = () => {
+  const renderVideoPreview = () => {
     return (
       <View style={[styles.container, styles.previewContainer]}>
+        <CameraVideoPreview player={player} />
         <Pressable style={styles.button} onPress={() => setUri(null)}>
-          <Text style={styles.buttonText}>Take another picture</Text>
+          <Text style={styles.buttonText}>Take another video</Text>
         </Pressable>
       </View>
     );
@@ -102,6 +132,7 @@ export default function VideoRecording() {
             ref={cameraRef}
             mode={'video'}
             facing={facing}
+            mirror={true}
             mute={false}
             responsiveOrientationWhenOrientationLocked
           />
@@ -115,7 +146,7 @@ export default function VideoRecording() {
           <Pressable onPress={recordVideo}>
             {({ pressed }) => (
               <View
-                style={[
+                style={[     
                   styles.shutterBtn,
                   {
                     opacity: pressed ? 0.5 : 1,
@@ -143,7 +174,7 @@ export default function VideoRecording() {
 
   return (
     <View style={styles.container}>
-      {uri ? renderPicture() : renderCamera()}
+      {uri ? renderVideoPreview() : renderCamera()}
     </View>
   );
 }
@@ -163,13 +194,6 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     gap: 30,
-    borderRadius: 30,
-    overflow: "hidden",
-  },
-  previewImage: {
-    borderRadius: 30,
-    width: 450,
-    aspectRatio: 1,
   },
   camera: {
     flex: 1,

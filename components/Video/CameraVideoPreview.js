@@ -3,29 +3,22 @@ import { useEvent } from 'expo';
 import { VideoView } from 'expo-video';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 
-export default function VideoPlayer({ player }) {
+export default function CameraVideoPreview({ player }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // --- Use useEvent to get the latest player status ---
-  // It returns an object with the latest event payload ({ status, error }).
   const playerStatus = useEvent(player, 'statusChange', {
-    status: player?.status, // Initial status
-    error: undefined,       // Initial error state
+    status: player?.status,
+    error: undefined,
   });
 
-  // --- Derive isLoading directly from the status provided by useEvent ---
-  // The component will re-render automatically when playerStatus.status changes.
   const isLoading = playerStatus.status === 'loading';
-
-  // --- Render Logic ---
-
-  // Handle the case where the player prop might not be ready yet
+  
   if (!player) {
-     return (
-       <View style={[styles.videoContainer, styles.centerContent]}>
-         <ActivityIndicator size="large" color="#cccccc" />
-       </View>
-     );
+    return (
+      <View style={[styles.videoContainer, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#cccccc" />
+      </View>
+    );
   }
 
   return (
@@ -51,9 +44,8 @@ export default function VideoPlayer({ player }) {
 // --- Styles ---
 const styles = StyleSheet.create({
   videoContainer: {
-    width: 360,
-    height: 215,
-    borderBottomLeftRadius: 20,
+    width: 300,
+    aspectRatio: 9/16,
     overflow: 'hidden',
     backgroundColor: '#000',
   },
