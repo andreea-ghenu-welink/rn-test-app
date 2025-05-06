@@ -52,10 +52,18 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="videoRecording"
+        options={{
+          title: 'Video Recording',
+          tabBarIcon: ({ color }) => <Ionicons name="videocam" size={32} color={color} />,
+          tabBarShowLabel: false,
+        }}
+      />
+      <Tabs.Screen
         name="researcherVideo"
         options={{
           title: 'Researcher Video',
-          tabBarIcon: ({ color }) => <Ionicons name="videocam" size={32} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="document-text" size={32} color={color} />,
           tabBarShowLabel: false,
         }}
       />
@@ -73,9 +81,9 @@ export default function AppLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 60, // Increase tab bar height
-    paddingBottom: 5, // Add padding at the bottom
-    paddingTop: 5, // Add padding at the top
+    height: 80, // Increase tab bar height
+    paddingBottom: 8, // Add padding at the bottom
+    paddingTop: 8, // Add padding at the top
     backgroundColor: '#FFFFFF',
     elevation: 8, // Android shadow
     shadowColor: '#000', // iOS shadow
