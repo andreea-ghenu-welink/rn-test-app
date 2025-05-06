@@ -39,6 +39,14 @@
           "supportsBackgroundPlayback": true,
           "supportsPictureInPicture": true
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "The app needs access to your camera to let you share them with your friends.",
+          "microphonePermission": "The app needs access to your microphone to let you share them with your friends.",
+          "recordAudioAndroid": true
+        }
       ]
     ]
   }
