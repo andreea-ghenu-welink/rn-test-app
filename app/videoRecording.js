@@ -1,20 +1,23 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { useRef, useState, useCallback } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Button, Pressable, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import Feather from "@expo/vector-icons/Feather";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 export default function VideoRecording() {
-  const [permission, requestPermission] = useCameraPermissions();
+  // Permissions
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
+
+  // Camera ref
   const cameraRef = useRef(null);
+
+  // Camera state
   const [uri, setUri] = useState(null);
-  const [mode, setMode] = useState("picture");
   const [facing, setFacing] = useState("back");
   const [recording, setRecording] = useState(false);
 
+  // Camera UI
   const [isCameraActive, setIsCameraActive] = useState(true);
 
   // Prevent the camera from being active when the screen is not focused
@@ -28,41 +31,52 @@ export default function VideoRecording() {
     }, [])
   );
 
-  if (!permission) {
+  if (!cameraPermission || !microphonePermission) {
     // Camera permissions are still loading
     return null;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted) {
     return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: "center" }}>
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Text style={{ textAlign: "center", fontSize: 20 }}>
           We need your permission to use the camera
         </Text>
-        <Button onPress={requestPermission} title="Grant permission" />
+        <Button onPress={requestCameraPermission} title="Grant permission" />
       </View>
     );
   }
 
-  const takePicture = async () => {
-    const photo = await cameraRef.current?.takePictureAsync();
-    setUri(photo?.uri);
-  };
+  if (!microphonePermission.granted) {
+    return (
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Text style={{ textAlign: "center", fontSize: 20 }}>
+          We need your permission to use the microphone
+        </Text>
+        <Button onPress={requestMicrophonePermission} title="Grant permission" />
+      </View>
+    );
+  }
 
   const recordVideo = async () => {
-    console.log(recording);
     if (recording) {
       setRecording(false);
       cameraRef.current?.stopRecording();
       return;
     }
-    setRecording(true);
-    const video = await cameraRef.current?.recordAsync();
-    console.log({ video });
-  };
 
-  const toggleMode = () => {
-    setMode((prev) => (prev === "picture" ? "video" : "picture"));
+    setRecording(true);
+
+    try {
+      const video =  await cameraRef.current?.recordAsync();
+      if (video) {
+        setUri(video?.uri);
+        console.log({ video });
+      }
+    } catch (error) {
+      console.error("Error recording video: ", error);
+      setRecording(false);
+    }
   };
 
   const toggleFacing = () => {
@@ -72,11 +86,6 @@ export default function VideoRecording() {
   const renderPicture = () => {
     return (
       <View style={[styles.container, styles.previewContainer]}>
-        <Image
-          source={{ uri }}
-          contentFit="contain"
-          style={styles.previewImage}
-        />
         <Pressable style={styles.button} onPress={() => setUri(null)}>
           <Text style={styles.buttonText}>Take another picture</Text>
         </Pressable>
@@ -89,27 +98,21 @@ export default function VideoRecording() {
       <View style={styles.camera}>
         {isCameraActive && (
           <CameraView
-          style={styles.camera}
-          ref={cameraRef}
-          mode={mode}
-          facing={facing}
-          mute={false}
-          responsiveOrientationWhenOrientationLocked
-        />
+            style={styles.camera}
+            ref={cameraRef}
+            mode={'video'}
+            facing={facing}
+            mute={false}
+            responsiveOrientationWhenOrientationLocked
+          />
         )}
         {/* Overlay UI components */}
         <View style={styles.cameraBorderContainer}>
           <View style={styles.cameraBorder} />
         </View>
+
         <View style={styles.shutterContainer}>
-          <Pressable onPress={toggleMode}>
-            {mode === "picture" ? (
-              <Feather name="video" size={32} color="white" />
-            ) : (
-              <AntDesign name="picture" size={32} color="white" />
-            )}
-          </Pressable>
-          <Pressable onPress={mode === "picture" ? takePicture : recordVideo}>
+          <Pressable onPress={recordVideo}>
             {({ pressed }) => (
               <View
                 style={[
@@ -123,14 +126,14 @@ export default function VideoRecording() {
                   style={[
                     styles.shutterBtnInner,
                     {
-                      backgroundColor: mode === "picture" ? "white" : "red",
+                      backgroundColor: recording ? "red" : "white",
                     },
                   ]}
                 />
               </View>
             )}
           </Pressable>
-          <Pressable onPress={toggleFacing}>
+          <Pressable style={styles.toggleFacing} onPress={toggleFacing}>
             <FontAwesome6 name="rotate-left" size={32} color="white" />
           </Pressable>
         </View>
@@ -151,6 +154,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    gap: 20,
   },
   previewContainer: {
     gap: 30,
@@ -188,7 +197,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 30,
   },
   shutterBtn: {
@@ -202,9 +211,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   shutterBtnInner: {
-    width: 70,
-    height: 70,
+    width: 40,
+    height: 40,
     borderRadius: 50,
+  },
+  toggleFacing: {
+    position: "absolute",
+    right: 40,
   },
   cameraBorderContainer: {
     position: "absolute",

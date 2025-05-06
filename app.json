@@ -20,7 +20,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.andreea.ghenu.rntestapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -48,6 +53,12 @@
           "recordAudioAndroid": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8fd5e51c-c2d3-435c-9af9-3d4c54240c66"
+      }
+    }
   }
 }
