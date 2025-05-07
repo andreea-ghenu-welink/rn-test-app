@@ -9,20 +9,20 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "^53.0.7",
+    "expo": "^53.0.8",
     "expo-camera": "~16.1.6",
-    "expo-constants": "~17.1.5",
-    "expo-image": "~2.1.6",
+    "expo-constants": "^17.1.6",
+    "expo-image": "^2.1.7",
     "expo-image-picker": "~16.1.4",
     "expo-linking": "~7.1.4",
-    "expo-router": "~5.0.5",
+    "expo-media-library": "~17.1.6",
+    "expo-router": "^5.0.6",
     "expo-status-bar": "~2.2.3",
     "expo-video": "~2.1.8",
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0",
-    "expo-media-library": "~17.1.6"
+    "react-native-screens": "~4.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
