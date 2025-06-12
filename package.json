@@ -3,10 +3,20 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
+    "//--- Start Development Servers ---": "",
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start:dev": "expo start --dev-client",
+
+    "//--- Run on Expo Go (Shortcuts) ---": "",
+    "start:android": "expo start --android",
+    "start:ios": "expo start --ios",
+    "start:web": "expo start --web",
+
+    "//--- Build with EAS for Development ---": "",
+    "build:dev": "eas build --platform all --profile development",
+    "build:dev:android": "eas build --platform android --profile development",
+    "build:dev:ios": "eas build --platform ios --profile development",
+    "build:dev:simulator": "eas build --platform ios --profile ios-simulator"
   },
   "dependencies": {
     "expo": "^53.0.8",
